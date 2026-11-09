@@ -779,10 +779,22 @@ api.get(
   ),
 );
 
+const mongoUri = process.env.MONGO_URI;
+if (!mongoUri) {
+  console.error("\n❌ FATAL CONFIGURATION ERROR: MONGO_URI is missing!");
+  console.error("👉 Please add the 'MONGO_URI' variable in your Render Dashboard -> Environment tab.");
+  console.error("👉 Example: mongodb+srv://<user>:<password>@cluster0.mongodb.net/gympass?retryWrites=true&w=majority\n");
+  process.exit(1);
+}
+
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(mongoUri)
   .then(() =>
     app.listen(process.env.PORT || 4000, () =>
-      console.log("API on", process.env.PORT || 4000),
+      console.log("✅ API successfully running on port", process.env.PORT || 4000),
     ),
-  );
+  )
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err.message);
+    process.exit(1);
+  });
