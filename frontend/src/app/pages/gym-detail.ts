@@ -161,25 +161,67 @@ export class GymDetail implements OnInit {
           this.msg.set(e.error?.error);
           this.busy.set(false);
         },
-        next: (o) =>
-          new Razorpay({
-            key: o.key,
-            amount: o.amount,
-            currency: "INR",
-            order_id: o.orderId,
-            name: "FitPass",
-            description: this.g().name,
-            theme: { color: "#c6ff3d" },
-            prefill: { contact: this.api.user().phone },
-            modal: { ondismiss: () => this.busy.set(false) },
-            handler: (res: any) =>
-              this.api
-                .post("/bookings/verify", res)
-                .subscribe({
-                  next: () => this.r.navigate(["/tickets"]),
-                  error: (e) => this.msg.set(e.error?.error),
-                }),
-          }).open(),
+        next: (o) => {
+          // If in simulated test mode or placeholder key
+          if (
+            o.isMock ||
+            typeof Razorpay === "undefined" ||
+            !o.key ||
+            o.key.includes("xxx") ||
+            o.key === "rzp_test_placeholder"
+          ) {
+            this.api
+              .post("/bookings/verify", {
+                razorpay_order_id: o.orderId,
+                razorpay_payment_id: `pay_test_${Date.now()}`,
+                razorpay_signature: "mock_test_signature",
+              })
+              .subscribe({
+                next: () => this.r.navigate(["/tickets"]),
+                error: (e) => {
+                  this.msg.set(e.error?.error || "Test payment failed");
+                  this.busy.set(false);
+                },
+              });
+            return;
+          }
+
+          // Real Razorpay Test / Live Checkout
+          try {
+            const rzp = new Razorpay({
+              key: o.key,
+              amount: o.amount,
+              currency: "INR",
+              order_id: o.orderId,
+              name: "FitPass",
+              description: `${this.g().name} Pass`,
+              theme: { color: "#c6ff3d" },
+              prefill: {
+                contact: this.api.user()?.phone || "",
+                email: this.api.user()?.email || "",
+              },
+              modal: { ondismiss: () => this.busy.set(false) },
+              handler: (res: any) =>
+                this.api
+                  .post("/bookings/verify", res)
+                  .subscribe({
+                    next: () => this.r.navigate(["/tickets"]),
+                    error: (e) => {
+                      this.msg.set(e.error?.error);
+                      this.busy.set(false);
+                    },
+                  }),
+            });
+            rzp.on("payment.failed", (resp: any) => {
+              this.msg.set(resp.error?.description || "Payment failed");
+              this.busy.set(false);
+            });
+            rzp.open();
+          } catch (err: any) {
+            this.msg.set(err.message || "Failed to open payment gateway");
+            this.busy.set(false);
+          }
+        },
       });
   }
 }
