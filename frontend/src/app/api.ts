@@ -1,7 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpInterceptorFn } from '@angular/common/http';
 import { CanActivateFn, Router } from '@angular/router';
-export const API = 'http://localhost:4000/api';
+export const API = 'https://gym-pass-web.onrender.com/api';
 export const authInterceptor: HttpInterceptorFn = (req, next) => { const t = localStorage.getItem('t'); return next(t ? req.clone({ setHeaders: { Authorization: 'Bearer ' + t } }) : req); };
 @Injectable({ providedIn: 'root' })
 export class Api {
