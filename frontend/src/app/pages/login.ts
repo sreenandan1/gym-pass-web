@@ -116,6 +116,21 @@ import { Api } from "../api";
           }
         }
 
+        <!-- Quick Super Admin Login Access -->
+        <div style="border-top: 1px dashed var(--line); padding-top: 14px; margin-top: 8px; text-align: center;">
+          <button
+            type="button"
+            class="btn ghost"
+            style="width: 100%; font-size: 13px; min-height: 38px; border-color: rgba(198, 255, 61, 0.4); color: var(--a);"
+            (click)="fillSuperAdmin()"
+          >
+            👑 One-Click Super Admin Login
+          </button>
+          <small class="mut" style="font-size: 11px; display: block; margin-top: 4px;">
+            superadmin&#64;gmail.com · superadmin&#64;123
+          </small>
+        </div>
+
         @if (err()) {
           <p style="color: var(--bad); font-size: 13px; background: rgba(255, 92, 122, 0.1); border: 1px solid rgba(255, 92, 122, 0.2); border-radius: 8px; padding: 10px;">
             ⚠️ {{ err() }}
@@ -212,6 +227,15 @@ export class Login {
         next: (res) => this.handleSuccess(res),
         error: (e: any) => this.err.set(e.error?.error || "Registration failed"),
       });
+  }
+
+  fillSuperAdmin() {
+    this.mode.set("password");
+    this.isRegistering.set(false);
+    this.email = "superadmin@gmail.com";
+    this.password = "superadmin@123";
+    this.err.set("");
+    this.loginPassword();
   }
 
   private handleSuccess(res: any) {
