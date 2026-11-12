@@ -15,5 +15,6 @@ export class Api {
   login(r: any) { localStorage.setItem('t', r.token); localStorage.setItem('u', JSON.stringify(r.user)); this.user.set(r.user); }
   logout() { localStorage.clear(); this.user.set(null); }
 }
+
 export const role = (...r: string[]): CanActivateFn => () => { const a = inject(Api), rt = inject(Router); return (a.user() && (!r.length || r.includes(a.user().role))) || rt.parseUrl('/login'); };
 export const inr = (p: number) => '₹' + (p / 100).toLocaleString('en-IN');
