@@ -31,7 +31,10 @@ app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
   }),
-  cors({ origin: process.env.CLIENT_URL || true }),
+  cors({
+    origin: (origin, callback) => callback(null, true),
+    credentials: true,
+  }),
   express.json({ limit: "10mb" }),
   rate({ windowMs: 60000, limit: 120 }),
 );
