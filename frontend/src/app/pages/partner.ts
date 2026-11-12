@@ -116,16 +116,98 @@ import { Api, inr } from '../api';
           <textarea [(ngModel)]="gym.description" placeholder="Description of equipment, trainers..." rows="2"></textarea>
         </div>
 
-        <div class="row row-mobile-stack">
-          <div style="flex: 1;">
-            <label class="mut" style="font-size: 12px; display: block; margin-bottom: 4px;">Amenities (comma separated)</label>
-            <input [(ngModel)]="amen" placeholder="AC, Trainer, Shower, Parking" />
-          </div>
-          <div style="flex: 1;">
-            <label class="mut" style="font-size: 12px; display: block; margin-bottom: 4px;">Photo URL</label>
-            <input [(ngModel)]="photo" placeholder="https://..." />
-          </div>
+        <div>
+          <label class="mut" style="font-size: 12px; display: block; margin-bottom: 4px;">Amenities (comma separated)</label>
+          <input [(ngModel)]="amen" placeholder="AC, Trainer, Shower, Parking" />
         </div>
+
+        <!-- Photos Upload & URL Management -->
+        <div class="stack" style="background: #0d0d14; border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+          <div class="row sp" style="gap: 8px;">
+            <div>
+              <label style="font-weight: 600; font-size: 13px; color: var(--a);">📸 Gym Photos</label>
+              <p class="mut" style="font-size: 11px;">Upload real photos from your device or paste image URLs</p>
+            </div>
+            <button type="button" class="btn" style="padding: 6px 14px; font-size: 12px; min-height: 36px;" (click)="photoInput.click()" [disabled]="uploading()">
+              {{ uploading() ? 'Uploading...' : '📁 Upload Photos' }}
+            </button>
+            <input #photoInput type="file" multiple accept="image/*" style="display:none" (change)="onFilesSelected($event)" />
+          </div>
+
+          <div class="row" style="gap: 8px;">
+            <input [(ngModel)]="photoUrlInput" placeholder="Paste image URL (https://...)" (keydown.enter)="addPhotoByUrl()" style="flex: 1; min-height: 38px; padding: 8px 12px; font-size: 13px;" />
+            <button type="button" class="btn ghost" style="padding: 6px 14px; font-size: 12px; min-height: 38px;" (click)="addPhotoByUrl()">+ Add URL</button>
+          </div>
+
+          @if (uploadedPhotos().length) {
+            <div>
+              <span class="mut" style="font-size: 11px; display: block; margin-bottom: 6px;">Photos ({{ uploadedPhotos().length }})</span>
+              <div class="row" style="gap: 10px; flex-wrap: wrap;">
+                @for (p of uploadedPhotos(); track p; let idx = $index) {
+                  <div style="position: relative; width: 88px; height: 68px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); background: #000;">
+                    <img [src]="p" style="width: 100%; height: 100%; object-fit: cover;" />
+                    <button type="button" (click)="removePhoto(idx)"
+                            title="Remove photo"
+                            style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.8); color: #fff; border: 0; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center;">✕</button>
+                  </div>
+                }
+              </div>
+            </div>
+          } @else {
+            <div style="border: 1px dashed var(--line); border-radius: 10px; padding: 14px; text-align: center; cursor: pointer;" (click)="photoInput.click()">
+              <p class="mut" style="font-size: 12px;">No photos added yet. Tap "Upload Photos" or paste an image URL above.</p>
+            </div>
+          }
+        </div>
+
+        <!-- Videos Upload & URL Management -->
+        <div class="stack" style="background: #0d0d14; border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+          <div class="row sp" style="gap: 8px;">
+            <div>
+              <label style="font-weight: 600; font-size: 13px; color: var(--a);">🎥 Gym Videos & Virtual Tour</label>
+              <p class="mut" style="font-size: 11px;">Upload MP4/video clips from device or paste video URLs</p>
+            </div>
+            <button type="button" class="btn" style="padding: 6px 14px; font-size: 12px; min-height: 36px;" (click)="videoInput.click()" [disabled]="uploading()">
+              {{ uploading() ? 'Uploading...' : '📁 Upload Videos' }}
+            </button>
+            <input #videoInput type="file" multiple accept="video/*" style="display:none" (change)="onFilesSelected($event)" />
+          </div>
+
+          <div class="row" style="gap: 8px;">
+            <input [(ngModel)]="videoUrlInput" placeholder="Paste video URL (https://...)" (keydown.enter)="addVideoByUrl()" style="flex: 1; min-height: 38px; padding: 8px 12px; font-size: 13px;" />
+            <button type="button" class="btn ghost" style="padding: 6px 14px; font-size: 12px; min-height: 38px;" (click)="addVideoByUrl()">+ Add URL</button>
+          </div>
+
+          @if (uploadedVideos().length) {
+            <div>
+              <span class="mut" style="font-size: 11px; display: block; margin-bottom: 6px;">Videos ({{ uploadedVideos().length }})</span>
+              <div class="row" style="gap: 10px; flex-wrap: wrap;">
+                @for (v of uploadedVideos(); track v; let idx = $index) {
+                  <div style="position: relative; width: 140px; height: 86px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); background: #000;">
+                    <video [src]="v" controls style="width: 100%; height: 100%; object-fit: cover;"></video>
+                    <button type="button" (click)="removeVideo(idx)"
+                            title="Remove video"
+                            style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.85); color: #fff; border: 0; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; z-index: 2;">✕</button>
+                  </div>
+                }
+              </div>
+            </div>
+          } @else {
+            <div style="border: 1px dashed var(--line); border-radius: 10px; padding: 14px; text-align: center; cursor: pointer;" (click)="videoInput.click()">
+              <p class="mut" style="font-size: 12px;">No videos added yet. Tap "Upload Videos" or paste a video URL above.</p>
+            </div>
+          }
+        </div>
+
+        @if (uploading()) {
+          <p style="color: var(--a); font-size: 12px; font-weight: 600;">⏳ Uploading media file(s), please wait...</p>
+        }
+        @if (mediaError()) {
+          <p style="color: var(--bad); font-size: 12px; font-weight: 600;">{{ mediaError() }}</p>
+        }
+        @if (profileSaved()) {
+          <p style="color: var(--a); font-size: 12px; font-weight: 600;">Gym profile & media saved successfully! ✔</p>
+        }
 
         <div class="row row-mobile-stack">
           <div style="flex: 1;">
@@ -153,8 +235,8 @@ import { Api, inr } from '../api';
           </div>
         </div>
 
-        <button class="btn" style="width: 100%; margin-top: 8px;" (click)="save()">
-          Save Gym Profile
+        <button class="btn" style="width: 100%; margin-top: 8px;" (click)="save()" [disabled]="uploading() || saving()">
+          {{ saving() ? 'Saving Profile...' : 'Save Gym Profile' }}
         </button>
       </div>
     </div>
@@ -171,8 +253,17 @@ export class Partner implements OnInit, OnDestroy {
 
   gym: any = {};
   amen = '';
-  photo = '';
   sc?: Html5Qrcode;
+
+  // Media signals & state
+  uploadedPhotos = signal<string[]>([]);
+  uploadedVideos = signal<string[]>([]);
+  photoUrlInput = '';
+  videoUrlInput = '';
+  uploading = signal<boolean>(false);
+  saving = signal<boolean>(false);
+  mediaError = signal<string>('');
+  profileSaved = signal<boolean>(false);
 
   ngOnInit() {
     this.refresh();
@@ -180,7 +271,8 @@ export class Partner implements OnInit, OnDestroy {
       if (g) {
         this.gym = g;
         this.amen = (g.amenities || []).join(', ');
-        this.photo = g.photos?.[0] || '';
+        this.uploadedPhotos.set([...(g.photos || [])]);
+        this.uploadedVideos.set([...(g.videos || [])]);
       }
     });
   }
@@ -240,7 +332,75 @@ export class Partner implements OnInit, OnDestroy {
     });
   }
 
+  onFilesSelected(event: any) {
+    const files: FileList = event.target.files;
+    if (!files || !files.length) return;
+
+    this.uploading.set(true);
+    this.mediaError.set('');
+
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append('files', files[i]);
+    }
+
+    this.api.post('/upload', formData).subscribe({
+      next: (res: any) => {
+        this.uploading.set(false);
+        if (res.files && Array.isArray(res.files)) {
+          const photos = [...this.uploadedPhotos()];
+          const videos = [...this.uploadedVideos()];
+          for (const f of res.files) {
+            if (f.type === 'video') {
+              videos.push(f.url);
+            } else {
+              photos.push(f.url);
+            }
+          }
+          this.uploadedPhotos.set(photos);
+          this.uploadedVideos.set(videos);
+        }
+        event.target.value = '';
+      },
+      error: (err: any) => {
+        this.uploading.set(false);
+        this.mediaError.set(err.error?.error || 'Failed to upload file(s)');
+        event.target.value = '';
+      },
+    });
+  }
+
+  addPhotoByUrl() {
+    const u = (this.photoUrlInput || '').trim();
+    if (!u) return;
+    this.uploadedPhotos.set([...this.uploadedPhotos(), u]);
+    this.photoUrlInput = '';
+  }
+
+  addVideoByUrl() {
+    const u = (this.videoUrlInput || '').trim();
+    if (!u) return;
+    this.uploadedVideos.set([...this.uploadedVideos(), u]);
+    this.videoUrlInput = '';
+  }
+
+  removePhoto(idx: number) {
+    const list = [...this.uploadedPhotos()];
+    list.splice(idx, 1);
+    this.uploadedPhotos.set(list);
+  }
+
+  removeVideo(idx: number) {
+    const list = [...this.uploadedVideos()];
+    list.splice(idx, 1);
+    this.uploadedVideos.set(list);
+  }
+
   save() {
+    this.saving.set(true);
+    this.profileSaved.set(false);
+    this.mediaError.set('');
+
     this.api
       .put('/partner/gym', {
         ...this.gym,
@@ -248,9 +408,21 @@ export class Partner implements OnInit, OnDestroy {
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean),
-        photos: this.photo ? [this.photo] : [],
+        photos: this.uploadedPhotos(),
+        videos: this.uploadedVideos(),
       })
-      .subscribe((g) => (this.gym = g));
+      .subscribe({
+        next: (g) => {
+          this.gym = g;
+          this.saving.set(false);
+          this.profileSaved.set(true);
+          setTimeout(() => this.profileSaved.set(false), 4000);
+        },
+        error: (err) => {
+          this.saving.set(false);
+          this.mediaError.set(err.error?.error || 'Failed to save gym profile');
+        },
+      });
   }
 
   ngOnDestroy() {

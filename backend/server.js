@@ -278,6 +278,7 @@ api.put(
       address,
       description,
       photos,
+      videos,
       amenities,
       rules,
       openTime,
@@ -295,6 +296,7 @@ api.put(
           address,
           description,
           photos,
+          videos,
           amenities,
           rules,
           openTime,
@@ -838,13 +840,18 @@ if (!mongoUri) {
   process.exit(1);
 }
 
+mongoose.connection.on("disconnected", () => {
+  console.warn("⚠️ MongoDB disconnected");
+});
+
 mongoose
   .connect(mongoUri)
-  .then(() =>
+  .then((conn) => {
+    console.log(`✅ MongoDB connected successfully: ${conn.connection.host}`);
     app.listen(process.env.PORT || 4000, () =>
       console.log("✅ API successfully running on port", process.env.PORT || 4000),
-    ),
-  )
+    );
+  })
   .catch((err) => {
     console.error("❌ MongoDB connection error:", err.message);
     process.exit(1);
